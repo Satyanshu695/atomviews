@@ -1,0 +1,60 @@
+[build]
+  publish = "public"
+
+[functions]
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/api/geocode"
+  to = "/.netlify/functions/geocode"
+  status = 200
+
+[[redirects]]
+  from = "/api/weather/current"
+  to = "/.netlify/functions/weather-current"
+  status = 200
+
+[[redirects]]
+  from = "/api/weather/hourly"
+  to = "/.netlify/functions/weather-hourly"
+  status = 200
+
+[[redirects]]
+  from = "/api/weather/daily"
+  to = "/.netlify/functions/weather-daily"
+  status = 200
+
+[[redirects]]
+  from = "/api/weather/historical"
+  to = "/.netlify/functions/historical"
+  status = 200
+
+[[redirects]]
+  from = "/api/climate"
+  to = "/.netlify/functions/climate"
+  status = 200
+
+[[redirects]]
+  from = "/api/air-quality"
+  to = "/.netlify/functions/air-quality"
+  status = 200
+
+[[redirects]]
+  from = "/api/alerts"
+  to = "/.netlify/functions/alerts"
+  status = 200
+
+[[redirects]]
+  from = "/api/astronomy"
+  to = "/.netlify/functions/astronomy"
+  status = 200
+
+[[redirects]]
+  from = "/api/marine"
+  to = "/.netlify/functions/marine"
+  status = 200
+
+[[redirects]]
+  from = "/api/health"
+  to = "/.netlify/functions/health"
+  status = 200

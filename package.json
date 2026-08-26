@@ -1,0 +1,7 @@
+{
+  "name": "atmos-weather-platform",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Atmos — global weather intelligence platform on Netlify"
+}
