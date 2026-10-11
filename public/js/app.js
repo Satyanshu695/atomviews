@@ -123,20 +123,36 @@
     e.target.textContent = unit === "metric" ? "°C" : "°F";
     if (current.lat !== null) loadAll(current);
   });
-
+  
   // ---------- Location selection ----------
+  
   async function selectLocation(loc) {
-    current = { lat: loc.latitude, lon: loc.longitude, name: loc.name || "", country: loc.country || "" };
+    locationVersion++;
+    loaded.clear();
+
+    current = {
+      lat: loc.latitude,
+      lon: loc.longitude,
+      name: loc.name || "",
+      country: loc.country || ""
+    };
+
+    const version = locationVersion;
+
     placeMarker(current.lat, current.lon);
     $("#empty-state").hidden = true;
     $("#current-panel").hidden = false;
     $("#tabs").hidden = false;
     $("#panels").hidden = false;
-    await loadAll(current);
+
+    await loadAll(current, version);
   }
 
-  async function loadAll(loc) {
-    await loadCurrent(loc);
+  async function loadAll(loc, version) {
+    await loadCurrent(loc, version);
+
+    if (version !== locationVersion) return;
+
     await loadTabData(activeTab());
   }
 
