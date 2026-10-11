@@ -527,34 +527,70 @@ async function loadAstronomy(loc, version, requestedUnit) {
 
   // ---------- Historical ----------
   let historicalChart = null;
-  async function loadHistorical() {
-    const body = await api("/api/weather/historical", { lat: current.lat, lon: current.lon });
-    const rows = body.data;
-    const labels = rows.map((r) => r.date);
-    const highs = rows.map((r) => (unit === "metric" ? r.temp_max : cToF(r.temp_max)));
-    const lows = rows.map((r) => (unit === "metric" ? r.temp_min : cToF(r.temp_min)));
 
-    const ctx = document.getElementById("historical-chart");
-    if (historicalChart) historicalChart.destroy();
-    historicalChart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [
-          { label: "High", data: highs, borderColor: "#ffb84d", pointRadius: 0, tension: 0.3 },
-          { label: "Low", data: lows, borderColor: "#5eb1ff", pointRadius: 0, tension: 0.3 },
-        ],
+async function loadHistorical(loc, version, requestedUnit) {
+  const body = await api("/api/weather/historical", {
+    lat: loc.lat,
+    lon: loc.lon,
+  });
+
+  if (!isCurrentLocation(loc, version, requestedUnit)) return;
+
+  const rows = body.data;
+  const labels = rows.map((r) => r.date);
+
+  const highs = rows.map((r) =>
+    requestedUnit === "metric" ? r.temp_max : cToF(r.temp_max)
+  );
+
+  const lows = rows.map((r) =>
+    requestedUnit === "metric" ? r.temp_min : cToF(r.temp_min)
+  );
+
+  const ctx = document.getElementById("historical-chart");
+
+  if (historicalChart) historicalChart.destroy();
+
+  historicalChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "High",
+          data: highs,
+          borderColor: "#ffb84d",
+          pointRadius: 0,
+          tension: 0.3,
+        },
+        {
+          label: "Low",
+          data: lows,
+          borderColor: "#5eb1ff",
+          pointRadius: 0,
+          tension: 0.3,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: "#e8edf5" } },
       },
-      options: {
-        responsive: true,
-        plugins: { legend: { labels: { color: "#e8edf5" } } },
-        scales: {
-          x: { ticks: { color: "#93a1b8", maxTicksLimit: 10 }, grid: { color: "#1e293b" } },
-          y: { ticks: { color: "#93a1b8" }, grid: { color: "#1e293b" } },
+      scales: {
+        x: {
+          ticks: { color: "#93a1b8", maxTicksLimit: 10 },
+          grid: { color: "#1e293b" },
+        },
+        y: {
+          ticks: { color: "#93a1b8" },
+          grid: { color: "#1e293b" },
         },
       },
-    });
-  }
+    },
+  });
+}
+
 
   // ---------- Climate ----------
   async function loadClimate() {
