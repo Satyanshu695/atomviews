@@ -489,20 +489,41 @@ async function loadAlerts(loc, version, requestedUnit) {
 }
 
   // ---------- Astronomy ----------
-  async function loadAstronomy() {
-    const body = await api("/api/astronomy", { lat: current.lat, lon: current.lon });
-    const d = body.data;
-    const grid = $("#astronomy-content");
-    grid.innerHTML = "";
-    const cards = [
-      ["Sunrise", fmtTime(d.sunrise)], ["Sunset", fmtTime(d.sunset)], ["Solar noon", fmtTime(d.solar_noon)],
-      ["Daylight", `${d.daylight_duration_hours ?? "—"} hrs`], ["Moon phase", d.moon_phase], ["Illumination", `${d.moon_illumination_pct}%`],
-    ];
-    for (const [label, value] of cards) {
-      grid.append(el("div", { class: "info-card" }, el("div", { class: "ic-label" }, label), el("div", { class: "ic-value" }, String(value))));
-    }
-    grid.append(el("div", { class: "info-card wide muted" }, d.note));
+
+async function loadAstronomy(loc, version, requestedUnit) {
+  const body = await api("/api/astronomy", {
+    lat: loc.lat,
+    lon: loc.lon,
+  });
+
+  if (!isCurrentLocation(loc, version, requestedUnit)) return;
+
+  const d = body.data;
+  const grid = $("#astronomy-content");
+  grid.innerHTML = "";
+
+  const cards = [
+    ["Sunrise", fmtTime(d.sunrise)],
+    ["Sunset", fmtTime(d.sunset)],
+    ["Solar noon", fmtTime(d.solar_noon)],
+    ["Daylight", `${d.daylight_duration_hours ?? "—"} hrs`],
+    ["Moon phase", d.moon_phase],
+    ["Illumination", `${d.moon_illumination_pct}%`],
+  ];
+
+  for (const [label, value] of cards) {
+    grid.append(
+      el(
+        "div",
+        { class: "info-card" },
+        el("div", { class: "ic-label" }, label),
+        el("div", { class: "ic-value" }, String(value))
+      )
+    );
   }
+
+  grid.append(el("div", { class: "info-card wide muted" }, d.note));
+}
 
   // ---------- Historical ----------
   let historicalChart = null;
