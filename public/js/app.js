@@ -315,19 +315,57 @@ async function loadHourly(loc, version, requestedUnit) {
     const list = $("#daily-list");
     list.innerHTML = "";
     for (const r of rows) {
-      const lowPct = max > min ? ((r.temp_min - min) / (max - min)) * 100 : 0;
-      const highPct = max > min ? ((r.temp_max - min) / (max - min)) * 100 : 100;
-      list.append(el("div", { class: "daily-row" },
+     
+async function loadDaily(loc, version, requestedUnit) {
+  const body = await api("/api/weather/daily", {
+    lat: loc.lat,
+    lon: loc.lon,
+    days: 16,
+  });
+
+  if (!isCurrentLocation(loc, version, requestedUnit)) return;
+
+  const rows = body.data;
+  const allHighs = rows.map((r) => r.temp_max).filter((v) => v !== null);
+  const allLows = rows.map((r) => r.temp_min).filter((v) => v !== null);
+  const min = Math.min(...allLows);
+  const max = Math.max(...allHighs);
+
+  const list = $("#daily-list");
+  list.innerHTML = "";
+
+  for (const r of rows) {
+    const lowPct = max > min ? ((r.temp_min - min) / (max - min)) * 100 : 0;
+    const highPct = max > min ? ((r.temp_max - min) / (max - min)) * 100 : 100;
+
+    list.append(
+      el(
+        "div",
+        { class: "daily-row" },
         el("div", {}, fmtWeekday(r.date)),
-        el("div", {},
-          el("div", { class: "temp-bar-track" }, el("div", {
-            class: "temp-bar",
-            style: `margin-left:${lowPct}%; width:${Math.max(4, highPct - lowPct)}%`,
-          }))),
+        el(
+          "div",
+          {},
+          el(
+            "div",
+            { class: "temp-bar-track" },
+            el("div", {
+              class: "temp-bar",
+              style: `margin-left:${lowPct}%; width:${Math.max(4, highPct - lowPct)}%`,
+            })
+          )
+        ),
         el("div", {}, `${iconFor(r.icon)} ${fmtTemp(r.temp_max)}° / ${fmtTemp(r.temp_min)}°`),
-        el("div", { class: "dr-precip" }, `${r.precipitation_probability ?? 0}% · ${r.precipitation ?? 0}mm`)));
-    }
+        el(
+          "div",
+          { class: "dr-precip" },
+          `${r.precipitation_probability ?? 0}% · ${r.precipitation ?? 0}mm`
+        )
+      )
+    );
   }
+}
+
 
   // ---------- Air quality ----------
   async function loadAir() {
