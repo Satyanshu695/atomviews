@@ -10,6 +10,7 @@
 
   let unit = "metric"; // metric (C, km/h) | imperial (F, mph)
   let current = { lat: null, lon: null, name: "", country: "" };
+  let locationVersion = 0;
   const compareList = [];
 
   const $ = (sel) => document.querySelector(sel);
