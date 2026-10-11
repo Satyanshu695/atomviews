@@ -593,24 +593,64 @@ async function loadHistorical(loc, version, requestedUnit) {
 
 
   // ---------- Climate ----------
-  async function loadClimate() {
-    const body = await api("/api/climate", { lat: current.lat, lon: current.lon, years: 10 });
-    const d = body.data;
-    const grid = $("#climate-content");
-    grid.innerHTML = "";
-    for (const m of d.months) {
-      if (m.no_data) {
-        grid.append(el("div", { class: "climate-month" }, el("h4", {}, m.month), el("div", { class: "cm-row" }, "No data")));
-        continue;
-      }
-      grid.append(el("div", { class: "climate-month" },
-        el("h4", {}, m.month),
-        el("div", { class: "cm-row" }, el("span", {}, "High/Low"), el("span", {}, `${fmtTemp(m.avg_high)}° / ${fmtTemp(m.avg_low)}°`)),
-        el("div", { class: "cm-row" }, el("span", {}, "Rainfall"), el("span", {}, `${m.avg_rainfall_mm} mm`)),
-        el("div", { class: "cm-row" }, el("span", {}, "Sunshine"), el("span", {}, `${m.avg_sunshine_hours_per_day} h/day`))));
+
+async function loadClimate(loc, version, requestedUnit) {
+  const body = await api("/api/climate", {
+    lat: loc.lat,
+    lon: loc.lon,
+    years: 10,
+  });
+
+  if (!isCurrentLocation(loc, version, requestedUnit)) return;
+
+  const d = body.data;
+  const grid = $("#climate-content");
+  grid.innerHTML = "";
+
+  for (const m of d.months) {
+    if (m.no_data) {
+      grid.append(
+        el(
+          "div",
+          { class: "climate-month" },
+          el("h4", {}, m.month),
+          el("div", { class: "cm-row" }, "No data")
+        )
+      );
+      continue;
     }
-    grid.append(el("div", { class: "info-card wide muted" }, `${d.note} (${d.period})`));
+
+    grid.append(
+      el(
+        "div",
+        { class: "climate-month" },
+        el("h4", {}, m.month),
+        el(
+          "div",
+          { class: "cm-row" },
+          el("span", {}, "High/Low"),
+          el("span", {}, `${fmtTemp(m.avg_high)}° / ${fmtTemp(m.avg_low)}°`)
+        ),
+        el(
+          "div",
+          { class: "cm-row" },
+          el("span", {}, "Rainfall"),
+          el("span", {}, `${m.avg_rainfall_mm} mm`)
+        ),
+        el(
+          "div",
+          { class: "cm-row" },
+          el("span", {}, "Sunshine"),
+          el("span", {}, `${m.avg_sunshine_hours_per_day} h/day`)
+        )
+      )
+    );
   }
+
+  grid.append(
+    el("div", { class: "info-card wide muted" }, `${d.note} (${d.period})`)
+  );
+}
 
   // ---------- Compare ----------
   $("#compare-form").addEventListener("submit", async (e) => {
