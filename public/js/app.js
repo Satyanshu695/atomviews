@@ -446,26 +446,47 @@ async function loadMarine(loc, version, requestedUnit) {
 }
 
   // ---------- Alerts ----------
-  async function loadAlerts() {
-    const body = await api("/api/alerts", { lat: current.lat, lon: current.lon });
-    const d = body.data;
-    const container = $("#alerts-content");
-    container.innerHTML = "";
-    if (!d.available) {
-      container.append(el("div", { class: "no-alerts" }, d.message));
-      return;
-    }
-    if (!d.alerts.length) {
-      container.append(el("div", { class: "no-alerts" }, "No active official alerts for this location."));
-      return;
-    }
-    for (const a of d.alerts) {
-      container.append(el("div", { class: `alert-card severity-${a.severity}` },
+
+async function loadAlerts(loc, version, requestedUnit) {
+  const body = await api("/api/alerts", {
+    lat: loc.lat,
+    lon: loc.lon,
+  });
+
+  if (!isCurrentLocation(loc, version, requestedUnit)) return;
+
+  const d = body.data;
+  const container = $("#alerts-content");
+  container.innerHTML = "";
+
+  if (!d.available) {
+    container.append(el("div", { class: "no-alerts" }, d.message));
+    return;
+  }
+
+  if (!d.alerts.length) {
+    container.append(
+      el(
+        "div",
+        { class: "no-alerts" },
+        "No active official alerts for this location."
+      )
+    );
+    return;
+  }
+
+  for (const a of d.alerts) {
+    container.append(
+      el(
+        "div",
+        { class: `alert-card severity-${a.severity}` },
         el("div", { class: "alert-title" }, `${a.severity}: ${a.title}`),
         el("div", { class: "muted" }, a.area),
-        el("p", {}, a.description)));
-    }
+        el("p", {}, a.description)
+      )
+    );
   }
+}
 
   // ---------- Astronomy ----------
   async function loadAstronomy() {
