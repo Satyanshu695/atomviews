@@ -239,36 +239,70 @@ function loadTabData(tab) {
 
   // ---------- Hourly ----------
   let hourlyChart = null;
-  async function loadHourly() {
-    const body = await api("/api/weather/hourly", { lat: current.lat, lon: current.lon, hours: 48 });
-    const rows = body.data;
-    const labels = rows.map((r) => fmtTime(r.time));
-    const temps = rows.map((r) => (unit === "metric" ? r.temperature : cToF(r.temperature)));
+  
+async function loadHourly(loc, version, requestedUnit) {
+  const body = await api("/api/weather/hourly", {
+    lat: loc.lat,
+    lon: loc.lon,
+    hours: 48,
+  });
 
-    const ctx = document.getElementById("hourly-chart");
-    if (hourlyChart) hourlyChart.destroy();
-    hourlyChart = new Chart(ctx, {
-      type: "line",
-      data: { labels, datasets: [{ label: "Temperature", data: temps, borderColor: "#5eb1ff", backgroundColor: "rgba(94,177,255,0.15)", fill: true, tension: 0.35, pointRadius: 0 }] },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: "#93a1b8", maxTicksLimit: 12 }, grid: { color: "#1e293b" } },
-          y: { ticks: { color: "#93a1b8" }, grid: { color: "#1e293b" } },
+  if (!isCurrentLocation(loc, version, requestedUnit)) return;
+
+  const rows = body.data;
+  const labels = rows.map((r) => fmtTime(r.time));
+  const temps = rows.map((r) =>
+    requestedUnit === "metric" ? r.temperature : cToF(r.temperature)
+  );
+
+  const ctx = document.getElementById("hourly-chart");
+  if (hourlyChart) hourlyChart.destroy();
+
+  hourlyChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Temperature",
+        data: temps,
+        borderColor: "#5eb1ff",
+        backgroundColor: "rgba(94,177,255,0.15)",
+        fill: true,
+        tension: 0.35,
+        pointRadius: 0,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          ticks: { color: "#93a1b8", maxTicksLimit: 12 },
+          grid: { color: "#1e293b" },
+        },
+        y: {
+          ticks: { color: "#93a1b8" },
+          grid: { color: "#1e293b" },
         },
       },
-    });
+    },
+  });
 
-    const strip = $("#hourly-strip");
-    strip.innerHTML = "";
-    for (const r of rows.slice(0, 24)) {
-      strip.append(el("div", { class: "hour-chip" },
+  const strip = $("#hourly-strip");
+  strip.innerHTML = "";
+
+  for (const r of rows.slice(0, 24)) {
+    strip.append(
+      el(
+        "div",
+        { class: "hour-chip" },
         el("div", { class: "hc-time" }, fmtTime(r.time)),
         el("div", { class: "hc-icon" }, iconFor(r.icon)),
-        el("div", { class: "hc-temp" }, `${fmtTemp(r.temperature)}°`)));
-    }
+        el("div", { class: "hc-temp" }, `${fmtTemp(r.temperature)}°`)
+      )
+    );
   }
+}
 
   // ---------- Daily ----------
   async function loadDaily() {
