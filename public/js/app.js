@@ -145,36 +145,56 @@
   }
 
   // ---------- Current ----------
-  async function loadCurrent(loc) {
-    $("#loc-name").textContent = loc.name || "Selected location";
-    $("#loc-meta").textContent = `${loc.lat.toFixed(2)}, ${loc.lon.toFixed(2)}${loc.country ? " · " + loc.country : ""}`;
-    try {
-      const body = await api("/api/weather/current", { lat: loc.lat, lon: loc.lon, name: loc.name, country: loc.country });
-      const d = body.data;
-      $("#cur-icon").textContent = iconFor(d.icon);
-      $("#cur-temp").textContent = fmtTemp(d.temperature);
-      $("#cur-condition").textContent = d.condition;
-      $("#cur-feels").textContent = fmtTemp(d.feels_like);
 
-      const grid = $("#current-grid");
-      grid.innerHTML = "";
-      const metrics = [
-        ["Humidity", `${d.humidity ?? "—"}%`],
-        ["Wind", fmtWind(d.wind_speed)],
-        ["Gusts", fmtWind(d.wind_gusts)],
-        ["Pressure", `${d.pressure ?? "—"} hPa`],
-        ["Cloud cover", `${d.cloud_cover ?? "—"}%`],
-        ["Precipitation", `${d.precipitation ?? 0} mm`],
-      ];
-      for (const [label, value] of metrics) {
-        grid.append(el("div", { class: "metric" },
+async function loadCurrent(loc, version) {
+  $("#loc-name").textContent = loc.name || "Selected location";
+  $("#loc-meta").textContent = `${loc.lat.toFixed(2)}, ${loc.lon.toFixed(2)}${loc.country ? " · " + loc.country : ""}`;
+
+  try {
+    const body = await api("/api/weather/current", {
+      lat: loc.lat,
+      lon: loc.lon,
+      name: loc.name,
+      country: loc.country,
+    });
+
+    if (version !== locationVersion) return;
+
+    const d = body.data;
+
+    $("#cur-icon").textContent = iconFor(d.icon);
+    $("#cur-temp").textContent = fmtTemp(d.temperature);
+    $("#cur-condition").textContent = d.condition;
+    $("#cur-feels").textContent = fmtTemp(d.feels_like);
+
+    const grid = $("#current-grid");
+    grid.innerHTML = "";
+
+    const metrics = [
+      ["Humidity", `${d.humidity ?? "—"}%`],
+      ["Wind", fmtWind(d.wind_speed)],
+      ["Gusts", fmtWind(d.wind_gusts)],
+      ["Pressure", `${d.pressure ?? "—"} hPa`],
+      ["Cloud cover", `${d.cloud_cover ?? "—"}%`],
+      ["Precipitation", `${d.precipitation ?? 0} mm`],
+    ];
+
+    for (const [label, value] of metrics) {
+      grid.append(
+        el(
+          "div",
+          { class: "metric" },
           el("span", { class: "metric-label" }, label),
-          el("span", { class: "metric-value" }, value)));
-      }
-    } catch (err) {
-      $("#cur-condition").textContent = err.message;
+          el("span", { class: "metric-value" }, value)
+        )
+      );
     }
+  } catch (err) {
+    if (version !== locationVersion) return;
+
+    $("#cur-condition").textContent = err.message;
   }
+}
 
   // ---------- Tabs ----------
 const loaded = new Set();
