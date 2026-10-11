@@ -177,28 +177,65 @@
   }
 
   // ---------- Tabs ----------
-  document.querySelectorAll(".tab").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach((b) => b.classList.remove("active"));
-      document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
-      btn.classList.add("active");
-      document.querySelector(`.tab-panel[data-panel="${btn.dataset.tab}"]`).classList.add("active");
-      if (current.lat !== null) loadTabData(btn.dataset.tab);
-    });
+const loaded = new Set();
+const inFlight = new Map();
+
+function isCurrentLocation(loc, version, requestedUnit) {
+  return (
+    locationVersion === version &&
+    current.lat === loc.lat &&
+    current.lon === loc.lon &&
+    unit === requestedUnit
+  );
+}
+
+function loadTabData(tab) {
+  if (current.lat === null || current.lon === null) return null;
+
+  const loc = { ...current };
+  const version = locationVersion;
+  const requestedUnit = unit;
+  const key = `${tab}:${loc.lat}:${loc.lon}:${requestedUnit}`;
+  const requestKey = `${key}:version-${version}`;
+
+  if (loaded.has(key)) return Promise.resolve();
+
+  if (inFlight.has(requestKey)) {
+    return inFlight.get(requestKey);
+  }
+
+  const loaders = {
+    hourly: loadHourly,
+    daily: loadDaily,
+    air: loadAir,
+    marine: loadMarine,
+    alerts: loadAlerts,
+    astronomy: loadAstronomy,
+    historical: loadHistorical,
+    climate: loadClimate,
+    compare: () => {},
+  };
+
+  const loader = loaders[tab];
+  if (!loader) return null;
+
+  let request;
+
+  request = (async () => {
+    await loader(loc, version, requestedUnit);
+
+    if (isCurrentLocation(loc, version, requestedUnit)) {
+      loaded.add(key);
+    }
+  })().finally(() => {
+    if (inFlight.get(requestKey) === request) {
+      inFlight.delete(requestKey);
+    }
   });
 
-  const loaded = new Set();
-  function loadTabData(tab) {
-    const key = `${tab}:${current.lat}:${current.lon}:${unit}`;
-    if (loaded.has(key)) return;
-    loaded.add(key);
-    const loaders = {
-      hourly: loadHourly, daily: loadDaily, air: loadAir, marine: loadMarine,
-      alerts: loadAlerts, astronomy: loadAstronomy, historical: loadHistorical,
-      climate: loadClimate, compare: () => {},
-    };
-    return loaders[tab] ? loaders[tab]() : null;
-  }
+  inFlight.set(requestKey, request);
+  return request;
+}
 
   // ---------- Hourly ----------
   let hourlyChart = null;
