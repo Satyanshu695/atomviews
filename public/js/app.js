@@ -406,24 +406,44 @@ async function loadAir(loc, version, requestedUnit) {
 }
 
   // ---------- Marine ----------
-  async function loadMarine() {
-    const body = await api("/api/marine", { lat: current.lat, lon: current.lon });
-    const d = body.data;
-    const grid = $("#marine-content");
-    grid.innerHTML = "";
-    if (!d.available) {
-      grid.append(el("div", { class: "info-card wide" }, d.message));
-      return;
-    }
-    const first = d.hours[0];
-    const cards = [
-      ["Wave height", `${first.wave_height ?? "—"} m`], ["Wave period", `${first.wave_period ?? "—"} s`],
-      ["Swell height", `${first.swell_wave_height ?? "—"} m`], ["Sea temp", `${fmtTemp(first.sea_surface_temperature)}°`],
-    ];
-    for (const [label, value] of cards) {
-      grid.append(el("div", { class: "info-card" }, el("div", { class: "ic-label" }, label), el("div", { class: "ic-value" }, String(value))));
-    }
+
+async function loadMarine(loc, version, requestedUnit) {
+  const body = await api("/api/marine", {
+    lat: loc.lat,
+    lon: loc.lon,
+  });
+
+  if (!isCurrentLocation(loc, version, requestedUnit)) return;
+
+  const d = body.data;
+  const grid = $("#marine-content");
+  grid.innerHTML = "";
+
+  if (!d.available) {
+    grid.append(el("div", { class: "info-card wide" }, d.message));
+    return;
   }
+
+  const first = d.hours[0];
+
+  const cards = [
+    ["Wave height", `${first.wave_height ?? "—"} m`],
+    ["Wave period", `${first.wave_period ?? "—"} s`],
+    ["Swell height", `${first.swell_wave_height ?? "—"} m`],
+    ["Sea temp", `${fmtTemp(first.sea_surface_temperature)}°`],
+  ];
+
+  for (const [label, value] of cards) {
+    grid.append(
+      el(
+        "div",
+        { class: "info-card" },
+        el("div", { class: "ic-label" }, label),
+        el("div", { class: "ic-value" }, String(value))
+      )
+    );
+  }
+}
 
   // ---------- Alerts ----------
   async function loadAlerts() {
