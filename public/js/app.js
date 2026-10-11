@@ -368,20 +368,42 @@ async function loadDaily(loc, version, requestedUnit) {
 
 
   // ---------- Air quality ----------
-  async function loadAir() {
-    const body = await api("/api/air-quality", { lat: current.lat, lon: current.lon });
-    const d = body.data;
-    const grid = $("#air-content");
-    grid.innerHTML = "";
-    const cards = [
-      ["US AQI", d.us_aqi ?? "—"], ["Category", d.category], ["European AQI", d.european_aqi ?? "—"],
-      ["PM2.5", `${d.pm2_5 ?? "—"} µg/m³`], ["PM10", `${d.pm10 ?? "—"} µg/m³`], ["Ozone", `${d.ozone ?? "—"} µg/m³`],
-      ["NO₂", `${d.nitrogen_dioxide ?? "—"} µg/m³`], ["SO₂", `${d.sulphur_dioxide ?? "—"} µg/m³`], ["CO", `${d.carbon_monoxide ?? "—"} µg/m³`],
-    ];
-    for (const [label, value] of cards) {
-      grid.append(el("div", { class: "info-card" }, el("div", { class: "ic-label" }, label), el("div", { class: "ic-value" }, String(value))));
-    }
+ 
+async function loadAir(loc, version, requestedUnit) {
+  const body = await api("/api/air-quality", {
+    lat: loc.lat,
+    lon: loc.lon,
+  });
+
+  if (!isCurrentLocation(loc, version, requestedUnit)) return;
+
+  const d = body.data;
+  const grid = $("#air-content");
+  grid.innerHTML = "";
+
+  const cards = [
+    ["US AQI", d.us_aqi ?? "—"],
+    ["Category", d.category],
+    ["European AQI", d.european_aqi ?? "—"],
+    ["PM2.5", `${d.pm2_5 ?? "—"} µg/m³`],
+    ["PM10", `${d.pm10 ?? "—"} µg/m³`],
+    ["Ozone", `${d.ozone ?? "—"} µg/m³`],
+    ["NO₂", `${d.nitrogen_dioxide ?? "—"} µg/m³`],
+    ["SO₂", `${d.sulphur_dioxide ?? "—"} µg/m³`],
+    ["CO", `${d.carbon_monoxide ?? "—"} µg/m³`],
+  ];
+
+  for (const [label, value] of cards) {
+    grid.append(
+      el(
+        "div",
+        { class: "info-card" },
+        el("div", { class: "ic-label" }, label),
+        el("div", { class: "ic-value" }, String(value))
+      )
+    );
   }
+}
 
   // ---------- Marine ----------
   async function loadMarine() {
